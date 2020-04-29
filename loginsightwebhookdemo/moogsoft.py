@@ -83,6 +83,33 @@ def fetchResourceProperties(resourceId=None):
         props[prop["name"]] = prop["value"]
     return props
 
+def fetchAlertSymptoms(alertId=None, resourceId=None):
+    # Get alert triggered symptoms
+    headers = {'Content-type': 'application/json','Accept': 'application/json'}
+    symptomsURL = vropsURL+"api/alerts/contributingsymptoms?id="+alertId
+    auth = (vropsUser, vropsPass)
+    response = callapi(symptomsURL, method='get', payload=None, headers=headers, auth=auth, check=VERIFY)
+    rawSymptoms = json.loads(response)
+    # Get all symptom definitions in system
+    headers = {'Content-type': 'application/json','Accept': 'application/json'}
+    symptomsURL = vropsURL+"api/symptomdefinitions"
+    auth = (vropsUser, vropsPass)
+    response = callapi(symptomsURL, method='get', payload=None, headers=headers, auth=auth, check=VERIFY)
+    rawSymptomDefs = json.loads(response)
+
+    # Parse all the things
+    symptoms = {}
+    for symptom in rawSymptoms['contributingSymptoms'][0]['contributingSymptoms']['contributingSymptoms']:
+        symptomName = ""
+        for symptomDef in rawSymptomDefs['symptomDefinitions']:
+            if symptomDef['id'] == symptom['symptomDefinitionsIds'][0]:
+                symptomName = symptomDef['name']
+                symptoms[symptom['symptomId']] = symptomName
+                break
+    return symptoms
+
+
+
 # Route without <ALERTID> are for LI, with are for vROps
 # Adding PUT and POST for vROps so REST Notification test works
 # vROps (as of 6.6.1) will attempt both methods and fail if both
@@ -122,6 +149,7 @@ def moogsoft(ALERTID=None):
     link = vropsURL+"/ui/index.action#/object/"+a['resourceId']+"/alertsAndSymptoms/alerts/"+ALERTID
     recommendation = recommendations(a['alertId'])
     resourceProperties = fetchResourceProperties(a['resourceId'])
+    symptoms = fetchAlertSymptoms(a['alertId'], a['resourceId'])
 
     payload = {
         "signature":ALERTID,
@@ -138,9 +166,10 @@ def moogsoft(ALERTID=None):
         "agent_time":a['updateDate']/1000,
         "recommendation":recommendation,
         "resource_properties":resourceProperties,
+        "alertSymptoms":symptoms,
         "link":link
     }
-
+    logging.info(payload)
     # Defaults to Content-type: application/json
     # If changed you must specify the content-type manually
     headers = {'Content-type': 'application/json', 'Accept': 'application/json'}
