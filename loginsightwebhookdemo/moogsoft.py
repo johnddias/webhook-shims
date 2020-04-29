@@ -61,7 +61,7 @@ def recommendations(ALERTID=None):
     response = callapi(alertDescURL, method='get', payload=None, headers=headers, auth=auth, check=VERIFY)
 # Fetch recommendations from alert def
     recommendations = json.loads(response)
-    if recommendations['states'][0]['recommendationPriorityMap']:
+    if recommendations['states'][0]['recommendationPriorityMap'] in recommendations:
         for recommendation in recommendations['states'][0]['recommendationPriorityMap']:
             if recommendations['states'][0]['recommendationPriorityMap'][recommendation] == 1:
                 alertDescURL = vropsURL+"api/recommendations/"+recommendation
