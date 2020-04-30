@@ -84,28 +84,27 @@ def fetchResourceProperties(resourceId=None):
     return props
 
 def fetchAlertSymptoms(alertId=None, resourceId=None):
+    symptoms = {}
     # Get alert triggered symptoms
     headers = {'Content-type': 'application/json','Accept': 'application/json'}
     symptomsURL = vropsURL+"api/alerts/contributingsymptoms?id="+alertId
     auth = (vropsUser, vropsPass)
     response = callapi(symptomsURL, method='get', payload=None, headers=headers, auth=auth, check=VERIFY)
     rawSymptoms = json.loads(response)
-    # Get all symptom definitions in system
+    # Get symptom definitions for symptom name
+    symptomDefIds = ""
+    for symptom in rawSymptoms['contributingSymptoms'][0]['contributingSymptoms']['contributingSymptoms']:
+            if symptomDefIds == "":
+            else:
+                symptomDefIds = symptomDefIds + "&id=" + symptomDefId
     headers = {'Content-type': 'application/json','Accept': 'application/json'}
     symptomsURL = vropsURL+"api/symptomdefinitions"
     auth = (vropsUser, vropsPass)
     response = callapi(symptomsURL, method='get', payload=None, headers=headers, auth=auth, check=VERIFY)
-    rawSymptomDefs = json.loads(response)
-
-    # Parse all the things
-    symptoms = {}
-    for symptom in rawSymptoms['contributingSymptoms'][0]['contributingSymptoms']['contributingSymptoms']:
-        symptomName = ""
-        for symptomDef in rawSymptomDefs['symptomDefinitions']:
-            if symptomDef['id'] == symptom['symptomDefinitionsIds'][0]:
-                symptomName = symptomDef['name']
-                symptoms[symptom['symptomId']] = symptomName
-                break
+    symptomDefs = json.loads(response)
+    logging.info(symptomDefs)
+    for symptomDef in symptomDefs['symptomDefinitions']:
+        logging.info(symptomDef)
     return symptoms
 
 
