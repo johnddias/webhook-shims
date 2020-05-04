@@ -61,7 +61,7 @@ def recommendations(ALERTID=None):
     response = callapi(alertDescURL, method='get', payload=None, headers=headers, auth=auth, check=VERIFY)
 # Fetch recommendations from alert def
     recommendations = json.loads(response)
-    if recommendations['states'][0]['recommendationPriorityMap'] in recommendations:
+    if recommendations['states'][0]['recommendationPriorityMap']:
         for recommendation in recommendations['states'][0]['recommendationPriorityMap']:
             if recommendations['states'][0]['recommendationPriorityMap'][recommendation] == 1:
                 alertDescURL = vropsURL+"api/recommendations/"+recommendation
@@ -94,20 +94,22 @@ def fetchAlertSymptoms(alertId=None, resourceId=None):
     # Get symptom definitions for symptom name
     symptomDefIds = ""
     for symptom in rawSymptoms['contributingSymptoms'][0]['contributingSymptoms']['contributingSymptoms']:
+        symptomDefIdSet = symptom['symptomDefinitionsIds']
+        for symptomDefId in symptomDefIdSet:
             if symptomDefIds == "":
+                symptomDefIds = symptomDefId
             else:
                 symptomDefIds = symptomDefIds + "&id=" + symptomDefId
     headers = {'Content-type': 'application/json','Accept': 'application/json'}
-    symptomsURL = vropsURL+"api/symptomdefinitions"
+    symptomsURL = vropsURL + "api/symptomdefinitions?id=" + symptomDefIds
     auth = (vropsUser, vropsPass)
     response = callapi(symptomsURL, method='get', payload=None, headers=headers, auth=auth, check=VERIFY)
     symptomDefs = json.loads(response)
     logging.info(symptomDefs)
     for symptomDef in symptomDefs['symptomDefinitions']:
         logging.info(symptomDef)
+        symptoms[symptomDef['id']] = symptomDef['name']
     return symptoms
-
-
 
 # Route without <ALERTID> are for LI, with are for vROps
 # Adding PUT and POST for vROps so REST Notification test works
