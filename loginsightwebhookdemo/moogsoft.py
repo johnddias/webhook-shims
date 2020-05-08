@@ -55,6 +55,8 @@ def recommendations(ALERTID=None):
     alertURL = vropsURL+"api/alerts/"+ALERTID
     auth = (vropsUser, vropsPass)
     response = callapi(alertURL, method='get', payload=None, headers=headers, auth=auth, check=VERIFY)
+    if response.status_code != 200:
+        return
 # Fetch the alert to grab alert def ID
     alertInfo = json.loads(response)
     alertDescURL = vropsURL+"api/alertdefinitions/"+alertInfo['alertDefinitionId']
@@ -90,6 +92,8 @@ def fetchAlertSymptoms(alertId=None, resourceId=None):
     symptomsURL = vropsURL+"api/alerts/contributingsymptoms?id="+alertId
     auth = (vropsUser, vropsPass)
     response = callapi(symptomsURL, method='get', payload=None, headers=headers, auth=auth, check=VERIFY)
+    if response.status_code != 200:
+        return
     rawSymptoms = json.loads(response)
     # Get symptom definitions for symptom name
     symptomDefIds = ""
