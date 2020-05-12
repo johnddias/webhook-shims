@@ -55,7 +55,7 @@ def recommendations(ALERTID=None):
     alertURL = vropsURL+"api/alerts/"+ALERTID
     auth = (vropsUser, vropsPass)
     response = callapi(alertURL, method='get', payload=None, headers=headers, auth=auth, check=VERIFY)
-    if response.status_code != 200:
+    if response[1] != 200:
         return
 # Fetch the alert to grab alert def ID
     alertInfo = json.loads(response)
@@ -92,7 +92,7 @@ def fetchAlertSymptoms(alertId=None, resourceId=None):
     symptomsURL = vropsURL+"api/alerts/contributingsymptoms?id="+alertId
     auth = (vropsUser, vropsPass)
     response = callapi(symptomsURL, method='get', payload=None, headers=headers, auth=auth, check=VERIFY)
-    if response.status_code != 200:
+    if response[1] != 200:
         return
     rawSymptoms = json.loads(response)
     # Get symptom definitions for symptom name
@@ -153,8 +153,12 @@ def moogsoft(ALERTID=None):
     }
     link = vropsURL+"/ui/index.action#/object/"+a['resourceId']+"/alertsAndSymptoms/alerts/"+ALERTID
     recommendation = recommendations(a['alertId'])
+    if not recommendation:
+        recommendation = "<none>"
     resourceProperties = fetchResourceProperties(a['resourceId'])
     symptoms = fetchAlertSymptoms(a['alertId'], a['resourceId'])
+    if not symptoms:
+        symptoms = "<none>"
 
     payload = {
         "signature":ALERTID,
